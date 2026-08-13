@@ -1,20 +1,20 @@
-FROM python:3.12-slim
-
+# Build stage
+FROM eclipse-temurin:23-jdk-alpine AS build
 WORKDIR /app
 
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+COPY gradlew .
+COPY gradle gradle
+COPY build.gradle settings.gradle ./
+COPY src src
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
+RUN chmod +x gradlew && ./gradlew bootJar -x test --no-daemon
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Run stage
+FROM eclipse-temurin:23-jre-alpine
+WORKDIR /app
 
-COPY app ./app
-COPY data ./data
+COPY --from=build /app/build/libs/*.jar app.jar
 
-EXPOSE 8000
+EXPOSE 8080
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "java -Dserver.port=${PORT:-8080} -jar app.jar"]
