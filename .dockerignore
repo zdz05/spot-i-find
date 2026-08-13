@@ -1,0 +1,15 @@
+.gradle
+build
+.idea
+.vscode
+.venv
+venv
+.env
+*.iml
+HELP.md
+__pycache__
+app
+data
+requirements.txt
+.git
+.dockerignore
